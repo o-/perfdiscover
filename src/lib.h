@@ -18,12 +18,14 @@ struct Entry {
   } u;
 };
 
-template<size_t WS, size_t ES, size_t PF>
+template<size_t WS_bytes, size_t ES, size_t PF>
 struct Arena {
   typedef Entry<ES, PF> E;
-  static const size_t ELEMS = WS*8/ES;
+  static const size_t WS = pow(2, WS_bytes);
+  static const size_t ELEMS = WS/ES;
   E arena[ELEMS];
-  static_assert(sizeof(arena) == WS*8, "");
+  static_assert(sizeof(arena) == WS, "");
+  static_assert(ELEMS * sizeof(E) == WS, "");
   static_assert(sizeof(E) == ES, "");
   static_assert(sizeof(E) >= sizeof(E*), "");
 
@@ -79,7 +81,7 @@ void run(std::ostringstream& out) {
   unsigned long dur;
   unsigned long rt_dur;
 
-  unsigned long measure_runs = 10000 + pow(10, 18)/pow(WS, 10);
+  long unsigned measure_runs = (ES/8)*200000;
   {
     auto t1 = Clock::now();
     for (size_t i = 0; i < measure_runs; ++i)
@@ -88,11 +90,8 @@ void run(std::ostringstream& out) {
     dur = std::chrono::duration_cast<std::chrono::nanoseconds>(t2-t1).count();
   }
 
-  long unsigned target = 1000000000;
-  if (target <= dur) {
-    std::cout << "outlier\n";
-    return run<WS,ES,type,PF>(out);
-  }
+  long unsigned target = 5000000000;
+  assert(target > dur);
 
   long unsigned runs = measure_runs * ((long double)target / (long double)dur);
 
