@@ -6,3 +6,5 @@ res.csv
 bin/run
 out/*.csv
 src/gen.h
+plot.png
+*.swp
