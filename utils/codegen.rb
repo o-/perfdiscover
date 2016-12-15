@@ -8,7 +8,7 @@ def gen(workset_min, workset_max, element_min, element_max)
       (workset_min..workset_max).each do |workset|
         f.write "  run<#{workset}, #{element}, Linear>(out);\n"
         f.write "  run<#{workset}, #{element}, Reverse>(out);\n"
-        if workset < 23
+        if workset < 26
           f.write "  run<#{workset}, #{element}, Random>(out);\n"
         end
       end

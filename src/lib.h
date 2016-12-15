@@ -118,7 +118,7 @@ void run(std::ostringstream& out) {
   std::cout << "measure\n";
 
   // Adjust the number of measurements to the expected time per run
-  long unsigned measure_runs = 2000000 * ES / pow(WS, 4) / (type == Random ? 1 : 4);
+  long unsigned measure_runs = 2000000 * ES / pow(WS, (type == Random && WS > 22 ? 5 : 4));
   {
     auto t1 = Clock::now();
     for (size_t i = 0; i < measure_runs; ++i)
@@ -128,7 +128,7 @@ void run(std::ostringstream& out) {
   }
 
   // Target experiment time in ns
-  long unsigned target = 1500000000;
+  long unsigned target = (type == Random && WS > 22 ? 10000000000 : 1500000000);
   long unsigned runs = measure_runs * ((long double)target / (long double)dur);
 
   std::cout << "running " << runs << "x ...\n";
