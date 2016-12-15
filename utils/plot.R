@@ -18,7 +18,7 @@ X11()
 
 ggplot(res2, aes(x=WS, y=value, color=ORD)) +
   stat_summary(fun.data = "mean_cl_boot") +
-  facet_wrap(ORD~ES, ncol=3, scale="free_y") +
+  facet_wrap(ORD~ES, ncol=3, scale="fixed") +
   scale_y_continuous(trans="log2")
 w()
 dev.copy(png,'plot.png')

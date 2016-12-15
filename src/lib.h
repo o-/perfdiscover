@@ -68,12 +68,12 @@ template<size_t WS, size_t ES>
 __attribute__((always_inline)) inline static void onerun(Arena<WS, ES>* arena) {
   auto first = &arena->arena[0];
   auto cur = first;
-  size_t count = 0;
+  // size_t count = 0;
   do {
-    ++count;
+    // ++count;
     cur = cur->u.next;
   } while (cur != first);
-  assert(count == arena->ELEMS);
+  // assert(count == arena->ELEMS);
 }
 
 enum Type {
@@ -150,7 +150,7 @@ void run(std::ostringstream& out) {
 
   std::cout << "ran for " << (long double)dur / 1000000000L << "s ("
             << (int)(100.0*missed_target)-100 << "% off target), "
-            << dur_rel << "ns per El\n";
+            << dur_rel << "ns per El (" << rt_dur_rel << ")\n";
 
   // If we are off target by more than 20% this is an outlier and we discard
   // the measurement
