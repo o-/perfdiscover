@@ -81,7 +81,8 @@ void run(std::ostringstream& out) {
   unsigned long dur;
   unsigned long rt_dur;
 
-  long unsigned measure_runs = (ES/8)*200000;
+  long unsigned measure_runs = 1600000 * ES / WS / WS;
+//  std::cout << measure_runs << "\n";
   {
     auto t1 = Clock::now();
     for (size_t i = 0; i < measure_runs; ++i)
@@ -91,7 +92,7 @@ void run(std::ostringstream& out) {
   }
 
   long unsigned target = 5000000000;
-  assert(target > dur);
+  // assert(target > dur);
 
   long unsigned runs = measure_runs * ((long double)target / (long double)dur);
 
@@ -107,7 +108,7 @@ void run(std::ostringstream& out) {
 
   double missed_target = ((double)abs((long long)dur-(long long)target)/(double)1000000000L);
 
-  if (missed_target > 0.15) {
+  if (missed_target > 1) {
     std::cout << "outlier\n";
     return run<WS,ES,type,PF>(out);
   }
