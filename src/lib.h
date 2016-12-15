@@ -107,8 +107,18 @@ void run(std::ostringstream& out) {
   unsigned long dur;
   unsigned long rt_dur;
 
+  std::string t;
+  switch(type) {
+    case Linear:  t = "Linear";  break;
+    case Reverse: t = "Reverse"; break;
+    case Random:  t = "Random";  break;
+  };
+
+  std::cout << "Running : " << WS << ", " << ES << ", " << t << "\n";
+  std::cout << "measure\n";
+
   // Adjust the number of measurements to the expected time per run
-  long unsigned measure_runs = 1600000 * ES / pow(WS, 3);
+  long unsigned measure_runs = 2000000 * ES / pow(WS, 4) / (type == Random ? 1 : 4);
   {
     auto t1 = Clock::now();
     for (size_t i = 0; i < measure_runs; ++i)
@@ -119,8 +129,9 @@ void run(std::ostringstream& out) {
 
   // Target experiment time in ns
   long unsigned target = 1500000000;
-
   long unsigned runs = measure_runs * ((long double)target / (long double)dur);
+
+  std::cout << "running " << runs << "x ...\n";
   {
     auto t1 = Clock::now();
     rdtsc();
@@ -134,26 +145,21 @@ void run(std::ostringstream& out) {
   double missed_target = (long double)(dur + abs((long long)dur-(long long)target)) /
                          (long double)dur;
 
+  unsigned long rt_dur_rel = (unsigned long)((long double)rt_dur/(long double)arena->ELEMS/(long double)runs);
+  long double dur_rel = ((long double)dur/(long double)arena->ELEMS/(long double)runs);
+
+  std::cout << "ran for " << (long double)dur / 1000000000L << "s ("
+            << (int)(100.0*missed_target)-100 << "% off target), "
+            << dur_rel << "ns per El\n";
+
   // If we are off target by more than 20% this is an outlier and we discard
   // the measurement
   if (missed_target > 1.2) {
     std::cout << "outlier\n";
     return run<WS,ES,type>(out);
   }
+  std::cout << "========================================\n";
 
-  unsigned long rt_dur_rel = (unsigned long)((long double)rt_dur/(long double)arena->ELEMS/(long double)runs);
-  long double dur_rel = ((long double)dur/(long double)arena->ELEMS/(long double)runs);
-
-  std::string t;
-  switch(type) {
-    case Linear:  t = "Linear";  break;
-    case Reverse: t = "Reverse"; break;
-    case Random:  t = "Random";  break;
-  };
-
-  std::cout << WS << ", " << ES << ", " << t << ", "
-            << dur_rel << ", "
-            << rt_dur_rel << "\n";
   out       << WS << ", " << ES << ", " << t << ", "
             << rt_dur_rel << "\n";
 
