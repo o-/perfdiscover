@@ -6,21 +6,25 @@
 #include <chrono>
 #include <math.h>
 
+#include <algorithm>    // std::random_shuffle
+#include <vector>       // std::vector
+#include <ctime>        // std::time
+#include <cstdlib>      // std::rand, std::srand
+
 typedef std::chrono::high_resolution_clock Clock;
 
 
-template<size_t ES, size_t PF>
+template<size_t ES>
 struct Entry {
-  uint8_t p1[PF];
   union U {
     struct Entry* next;
     uint8_t p2[ES];
   } u;
 };
 
-template<size_t WS_bytes, size_t ES, size_t PF>
+template<size_t WS_bytes, size_t ES>
 struct Arena {
-  typedef Entry<ES, PF> E;
+  typedef Entry<ES> E;
   static const size_t WS = pow(2, WS_bytes);
   static const size_t ELEMS = WS/ES;
   E arena[ELEMS];
@@ -42,20 +46,40 @@ struct Arena {
     }
     arena[0].u.next = &arena[ELEMS-1];
   }
+
+  void setupRandom() {
+    std::srand (123);
+    std::vector<int> vec;
+
+    for (size_t i = 0; i < ELEMS; ++i) vec.push_back(i);
+    std::random_shuffle(vec.begin(), vec.end());
+
+    int first = vec[0];
+    int pos = first;
+    for (size_t i = 1; i < ELEMS; ++i) {
+      arena[pos].u.next = &arena[vec[i]];
+      pos = vec[i];
+    }
+    arena[pos].u.next = &arena[first];
+  }
 };
 
-template<size_t WS, size_t ES, size_t PF>
-__attribute__((always_inline)) inline static void onerun(Arena<WS, ES, PF>* arena) {
+template<size_t WS, size_t ES>
+__attribute__((always_inline)) inline static void onerun(Arena<WS, ES>* arena) {
   auto first = &arena->arena[0];
   auto cur = first;
+  size_t count = 0;
   do {
+    ++count;
     cur = cur->u.next;
   } while (cur != first);
+  assert(count == arena->ELEMS);
 }
 
 enum Type {
   Linear,
   Reverse,
+  Random,
 };
 
 uint64_t rdtsc() {
@@ -65,15 +89,17 @@ uint64_t rdtsc() {
   return (uint64_t)hi << 32 | lo;
 }
 
-template<size_t WS, size_t ES, Type type, size_t PF=0>
+template<size_t WS, size_t ES, Type type>
 void run(std::ostringstream& out) {
   // setup
-  auto arena = new Arena<WS, ES, PF>;
+  auto arena = new Arena<WS, ES>;
   assert(arena);
   if (type == Linear)
     arena->setupLinear();
   else if (type == Reverse)
     arena->setupReverse();
+  else if (type == Random)
+    arena->setupRandom();
 
   for (size_t i = 0; i < 10; ++i)
     onerun(arena);
@@ -81,8 +107,8 @@ void run(std::ostringstream& out) {
   unsigned long dur;
   unsigned long rt_dur;
 
-  long unsigned measure_runs = 1600000 * ES / WS / WS;
-//  std::cout << measure_runs << "\n";
+  // Adjust the number of measurements to the expected time per run
+  long unsigned measure_runs = 1600000 * ES / pow(WS, 3);
   {
     auto t1 = Clock::now();
     for (size_t i = 0; i < measure_runs; ++i)
@@ -91,11 +117,10 @@ void run(std::ostringstream& out) {
     dur = std::chrono::duration_cast<std::chrono::nanoseconds>(t2-t1).count();
   }
 
-  long unsigned target = 5000000000;
-  // assert(target > dur);
+  // Target experiment time in ns
+  long unsigned target = 1500000000;
 
   long unsigned runs = measure_runs * ((long double)target / (long double)dur);
-
   {
     auto t1 = Clock::now();
     rdtsc();
@@ -106,20 +131,30 @@ void run(std::ostringstream& out) {
     dur = std::chrono::duration_cast<std::chrono::nanoseconds>(t2-t1).count();
   }
 
-  double missed_target = ((double)abs((long long)dur-(long long)target)/(double)1000000000L);
+  double missed_target = (long double)(dur + abs((long long)dur-(long long)target)) /
+                         (long double)dur;
 
-  if (missed_target > 1) {
+  // If we are off target by more than 20% this is an outlier and we discard
+  // the measurement
+  if (missed_target > 1.2) {
     std::cout << "outlier\n";
-    return run<WS,ES,type,PF>(out);
+    return run<WS,ES,type>(out);
   }
 
   unsigned long rt_dur_rel = (unsigned long)((long double)rt_dur/(long double)arena->ELEMS/(long double)runs);
   long double dur_rel = ((long double)dur/(long double)arena->ELEMS/(long double)runs);
 
-  std::cout << WS << ", " << ES << ", " << (type==Linear ? "L" : "R") << ", "
+  std::string t;
+  switch(type) {
+    case Linear:  t = "Linear";  break;
+    case Reverse: t = "Reverse"; break;
+    case Random:  t = "Random";  break;
+  };
+
+  std::cout << WS << ", " << ES << ", " << t << ", "
             << dur_rel << ", "
             << rt_dur_rel << "\n";
-  out       << WS << ", " << ES << ", " << (type==Linear ? "L" : "R") << ", "
+  out       << WS << ", " << ES << ", " << t << ", "
             << rt_dur_rel << "\n";
 
   delete arena;
