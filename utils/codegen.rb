@@ -2,7 +2,7 @@
 
 def gen(workset_min, workset_max, element_min, element_max)
   File.open('src/gen.h', 'w') do |f|
-    f.write "static void run(std::ostringstream& out, float speed) {\n"
+    f.write "static void run(std::ostringstream& out, size_t speed) {\n"
     element = element_min
     while element <= element_max do
       (workset_min..workset_max).each do |workset|

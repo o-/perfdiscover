@@ -92,7 +92,7 @@ uint64_t rdtsc() {
 }
 
 template<size_t WS, size_t ES, Type type>
-void run(std::ostringstream& out, float speed) {
+void run(std::ostringstream& out, size_t runs) {
   // setup
 
   size_t s = sizeof(Arena<WS, ES>);
@@ -117,74 +117,32 @@ void run(std::ostringstream& out, float speed) {
   };
 
   std::cout << "Running : " << WS << ", " << ES << ", " << t << "\n";
-  std::cout << "measure\n";
+  std::cout << "warmup\n";
 
   // Warmup
   onerun(arena);
-
-  // Measure how long one run takes
-  dur = 0;
-  static long unsigned target_measure_runs = 3;
-  long unsigned measure_runs = 0;
-  {
-    while (dur < 100000) {
-      auto t1 = Clock::now();
-      for (size_t i = 0; i < target_measure_runs; ++i) {
-        onerun(arena);
-      }
-      measure_runs += target_measure_runs;
-      auto t2 = Clock::now();
-      dur += std::chrono::duration_cast<std::chrono::nanoseconds>(t2-t1).count();
-    }
-  }
-
-  // Target experiment time in ns
-  long unsigned target = 1000000000;
-  target *= speed;
-  long unsigned runs = measure_runs * ((long double)target / (long double)dur);
-
-  // A lower limit of runs, even if it takes longer than the target
-  // experimentation time
-  if (runs < 5) {
-    runs = 5;
-    std::cout << "Adjusting target: measure_runs "
-              << measure_runs << " " << dur << "\n";
-    target = runs * (long double)dur/(long double)measure_runs;
-  }
+  onerun(arena);
 
   unsigned long rt_dur_rel;
   long double dur_rel;
 
-  while (true) {
-    std::cout << "running " << runs << "x ...\n";
-    {
-      auto t1 = Clock::now();
-      rdtsc();
-      for (size_t i = 0; i < runs; ++i)
-        onerun(arena);
-      rt_dur = rdtsc();
-      auto t2 = Clock::now();
-      dur = std::chrono::duration_cast<std::chrono::nanoseconds>(t2-t1).count();
-    }
-
-    double missed_target = (long double)(dur + abs((long long)dur-(long long)target)) /
-                           (long double)dur;
-
-    rt_dur_rel = (unsigned long)((long double)rt_dur/(long double)arena->ELEMS/(long double)runs);
-    dur_rel = ((long double)dur/(long double)arena->ELEMS/(long double)runs);
-
-    std::cout << "ran for " << (long double)dur / 1000000000L << "s ("
-              << (int)(100.0*missed_target)-100 << "% off target), "
-              << dur_rel << "ns per El (" << rt_dur_rel << ")\n";
-
-    // If we are way off target its probably an outlier and we discard it
-    if (missed_target > 2.0) {
-      runs = runs * ((long double)target / (long double)dur);
-      std::cout << "outlier, adjusting runs to " << runs << "x\n";
-    } else {
-      break;
-    }
+  std::cout << "running " << runs << "x ...\n";
+  {
+    auto t1 = Clock::now();
+    rdtsc();
+    for (size_t i = 0; i < runs; ++i)
+      onerun(arena);
+    rt_dur = rdtsc();
+    auto t2 = Clock::now();
+    dur = std::chrono::duration_cast<std::chrono::nanoseconds>(t2-t1).count();
   }
+
+  rt_dur_rel = (unsigned long)((long double)rt_dur/(long double)arena->ELEMS/(long double)runs);
+  dur_rel = ((long double)dur/(long double)arena->ELEMS/(long double)runs);
+
+  std::cout << "ran for " << (long double)dur / 1000000000L << "s ("
+            << dur_rel << "ns per El (" << rt_dur_rel << ")\n";
+
   std::cout << "========================================\n";
 
   out       << WS << ", " << ES << ", " << t << ", "

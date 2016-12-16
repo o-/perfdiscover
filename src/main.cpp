@@ -16,12 +16,12 @@ using namespace std;
 int main(int argc, char** argv) {
 
   int runs = 2;
-  float speed = 1;
+  int speed = 20;
 
   if (argc > 1)
     runs = atoi(argv[1]);
   if (argc > 2)
-    speed = atof(argv[2]);
+    speed = atoi(argv[2]);
 
   std::ostringstream oss;
 
