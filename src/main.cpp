@@ -10,14 +10,25 @@
 using namespace std;
 
 int main(int argc, char** argv) {
+
+  int runs = 2;
+  float speed = 1;
+
+  if (argc > 1)
+    runs = atoi(argv[1]);
+  if (argc > 2)
+    speed = atof(argv[2]);
+
   std::ostringstream oss;
-  run(oss);
-  run(oss);
+
+  for (int i = 0; i < runs; ++i)
+    run(oss, speed);
 
   std::ostringstream time;
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t);
-  time << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
+  time << tm.tm_year << "-" << tm.tm_mon << "-" << tm.tm_mday << "-"
+       << tm.tm_hour << ":" << tm.tm_min << "." << tm.tm_sec;
 
   std::ofstream f("out/run_" + time.str() + ".csv");
   f << "WS, ES, ORD, ticks\n";

@@ -1,7 +1,7 @@
 all : bin/run
 
 src/gen.h : ./utils/codegen.rb
-	./utils/codegen.rb 10 28 8 32
+	./utils/codegen.rb 10 28 8 64
 
 bin/run : src/gen.h src/main.cpp src/lib.h
 	g++ -Isrc -g -O3 -std=c++11 src/main.cpp -o bin/run
