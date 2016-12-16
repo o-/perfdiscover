@@ -13,19 +13,14 @@ multmerge = function(mypath){
 
 args <- commandArgs(trailingOnly = TRUE)
 
-if (length(args) > 0) {
-  res <- multmerge(args[1])
-} else {
-  res <- multmerge("out")
-}
+res <- multmerge(args[1])
 res2 <- melt(res, id.vars=c("WS", "ES", "ORD"))
 
 X11()
 
-ggplot(res2, aes(x=WS, y=value, color=ORD)) +
+pl <- ggplot(res2, aes(x=WS, y=value, color=ORD)) +
   stat_summary(fun.data = "mean_cl_boot", size=0.2) +
   facet_wrap(ORD~ES, ncol=4, scale="fixed") +
   scale_y_continuous(trans="log10")
-w()
-dev.copy(png,'plot.png')
-dev.off()
+# w()
+ggsave(filename=paste0("plot_",args[2],".pdf"), plot=pl, width=15, height=15, units="cm")
