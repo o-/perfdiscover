@@ -6,6 +6,11 @@
 #include <ctime>
 #include <fstream>
 
+#include <unistd.h>
+#include <limits.h>
+
+char hostname[HOST_NAME_MAX];
+char username[LOGIN_NAME_MAX];
 
 using namespace std;
 
@@ -24,13 +29,16 @@ int main(int argc, char** argv) {
   for (int i = 0; i < runs; ++i)
     run(oss, speed);
 
-  std::ostringstream time;
+  std::ostringstream fname;
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t);
-  time << tm.tm_year << "-" << tm.tm_mon << "-" << tm.tm_mday << "-"
-       << tm.tm_hour << ":" << tm.tm_min << "." << tm.tm_sec;
 
-  std::ofstream f("out/run_" + time.str() + ".csv");
+  fname << "run_" << "_" << gethostname(hostname, HOST_NAME_MAX) << "_";
+  fname << tm.tm_year << "-" << tm.tm_mon << "-" << tm.tm_mday << "-"
+        << tm.tm_hour << ":" << tm.tm_min << "." << tm.tm_sec;
+  fname << ".csv";
+
+  std::ofstream f("out/" + fname.str());
   f << "WS, ES, ORD, ticks\n";
   f << oss.str();
   f.flush();
