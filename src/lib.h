@@ -123,7 +123,7 @@ void run(std::ostringstream& out, size_t runs) {
   onerun(arena);
   onerun(arena);
 
-  runs = 200000000 / arena->ELEMS;
+  runs = runs / arena->ELEMS;
   unsigned long rt_dur_rel;
   long double dur_rel;
 

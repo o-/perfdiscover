@@ -16,7 +16,7 @@ using namespace std;
 int main(int argc, char** argv) {
 
   int runs = 2;
-  int speed = 20;
+  int speed = 200000000;
 
   if (argc > 1)
     runs = atoi(argv[1]);
