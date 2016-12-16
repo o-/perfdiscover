@@ -10,7 +10,6 @@
 #include <limits.h>
 
 char hostname[HOST_NAME_MAX];
-char username[LOGIN_NAME_MAX];
 
 using namespace std;
 
@@ -33,7 +32,8 @@ int main(int argc, char** argv) {
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t);
 
-  fname << "run_" << "_" << gethostname(hostname, HOST_NAME_MAX) << "_";
+  gethostname(hostname, HOST_NAME_MAX);
+  fname << "run_" << "_" << hostname << "_";
   fname << tm.tm_year << "-" << tm.tm_mon << "-" << tm.tm_mday << "-"
         << tm.tm_hour << ":" << tm.tm_min << "." << tm.tm_sec;
   fname << ".csv";

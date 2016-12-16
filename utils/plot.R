@@ -11,7 +11,13 @@ multmerge = function(mypath){
   Reduce(function(x,y) {rbind(x,y)}, datalist)
 }
 
-res <- multmerge("out")
+args <- commandArgs(trailingOnly = TRUE)
+
+if (length(args) > 0) {
+  res <- multmerge(args[1])
+} else {
+  res <- multmerge("out")
+}
 res2 <- melt(res, id.vars=c("WS", "ES", "ORD"))
 
 X11()
