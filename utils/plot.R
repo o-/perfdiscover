@@ -20,7 +20,8 @@ X11()
 
 pl <- ggplot(res2, aes(x=WS, y=value, color=ORD)) +
   stat_summary(fun.data = "mean_cl_boot", size=0.2) +
-  facet_wrap(ORD~ES, ncol=4, scale="fixed") +
+  facet_wrap(ORD~ES, ncol=4, scale="free") +
+  geom_vline(xintercept=c(15,18,as.numeric(args[3])), linetype = "longdash", color="gray")
   scale_y_continuous(trans="log10")
 # w()
-ggsave(filename=paste0("plot_",args[2],".pdf"), plot=pl, width=15, height=15, units="cm")
+ggsave(filename=paste0("plot_",args[2],".pdf"), plot=pl, width=20, height=20, units="cm")
